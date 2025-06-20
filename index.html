@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake OSINT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #000000, #1a1a1a);
+      position: relative;
+      overflow: hidden;
+    }
+    .neon-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: relative;
+      animation: spin 2s linear infinite;
+    }
+    .neon-ring::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 4px solid transparent;
+      border-top-color: #ffffff;
+      filter: drop-shadow(0 0 6px white);
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .fade-in {
+      animation: fadeIn 1s ease forwards;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .glow {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: moveGlow 15s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes moveGlow {
+      0% { top: 0%; left: 0%; }
+      25% { top: 20%; left: 80%; }
+      50% { top: 60%; left: 60%; }
+      75% { top: 80%; left: 20%; }
+      100% { top: 0%; left: 0%; }
+    }
+  </style>
+</head>
+<body class="text-white h-screen overflow-hidden relative">
+  <div class="glow"></div>
+
+  <!-- Логотип -->
+  <div class="absolute top-4 left-4 flex items-center space-x-2 z-50">
+    <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg">
+      <img src="https://i.pinimg.com/736x/d7/2c/59/d72c59c8b66c325973d85a6e1527f294.jpg" alt="logo" class="w-full h-full object-cover">
+    </div>
+    <span class="text-white font-semibold text-sm">DOXSENT</span>
+  </div>
+
+  <!-- Загрузка -->
+  <div id="loader" class="flex flex-col items-center justify-center h-full w-full">
+    <div class="neon-ring mb-6"></div>
+    <p class="text-white text-lg font-semibold">Загрузка...</p>
+  </div>
+
+  <!-- Авторизация -->
+  <div id="auth" class="hidden flex flex-col items-center justify-center h-full w-full fade-in space-y-4 px-6">
+    <h2 class="text-xl font-semibold text-center">Введите пароль для входа</h2>
+    <input id="password" type="password" placeholder="Пароль" class="w-full max-w-xs px-4 py-2 rounded-full text-black text-center border border-white outline-none" />
+    <button id="enterBtn" class="bg-white text-black font-semibold px-6 py-2 rounded-full hover:bg-gray-300 transition">Продолжить</button>
+    <button onclick="window.close()" class="text-red-500 underline text-sm">Закрыть сайт</button>
+    <a href="https://t.me/katanalow" target="_blank" class="bg-blue-500 text-white font-medium px-4 py-1 rounded-full mt-2">Купить подписку</a>
+  </div>
+
+  <!-- Главная -->
+  <div id="main" class="hidden flex flex-col items-center justify-center text-center px-6 fade-in h-full space-y-4">
+    <h1 class="text-2xl font-bold"> OSINT</h1>
+
+    <a href="https://t.me/doxsent_off" target="_blank" class="bg-blue-600 text-white font-medium px-4 py-2 rounded-full shadow hover:bg-blue-700 transition">
+      Наш Telegram-канал
+    </a>
+
+    <p class="text-gray-300">Введите Telegram username:</p>
+
+    <input id="tgInput" type="text" placeholder="@example_user" class="w-full max-w-xs px-4 py-2 rounded-full text-black text-center outline-none border-2 border-white shadow-inner focus:ring-2 ring-white" />
+
+    <button id="searchBtn" class="mt-2 bg-white text-black font-semibold px-6 py-2 rounded-full hover:bg-gray-300 transition">Искать</button>
+
+    <!-- Поиск -->
+    <div id="searching" class="hidden mt-4 text-sm text-gray-400 animate-pulse">Поиск данных...</div>
+
+    <!-- Результат -->
+    <div id="result" class="text-left bg-white/10 p-4 rounded-lg shadow-inner backdrop-blur-md hidden w-full max-w-xs space-y-2 mt-2 text-sm">
+      <p><span class="font-bold">ФИО:</span> <span id="name">---</span></p>
+      <p><span class="font-bold">IP:</span> <span id="ip">---</span></p>
+      <p><span class="font-bold">Город:</span> <span id="city">---</span></p>
+      <p><span class="font-bold">Email:</span> <span id="email">---</span></p>
+      <p><span class="font-bold">ИНН:</span> <span id="inn">---</span></p>
+      <p><span class="font-bold">Паспорт:</span> <span id="passport">---</span></p>
+      <p><span class="font-bold">Дата рождения:</span> <span id="birthdate">---</span></p>
+      <p><span class="font-bold">Telegram:</span> <span id="telegram">---</span></p>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "wwerixllonely";
+
+    const fakeProfiles = [
+      {"name":"Петров Алексей Николаевич","ip":"192.168.137.219","city":"Уфа","email":"алексей34@yandex.ru","inn":"744267402717","passport":"1138 498335","birthdate":"13.02.1991"},
+      {"name":"Морозов Дмитрий Николаевич","ip":"192.168.144.184","city":"Новосибирск","email":"дмитрий52@gmail.com","inn":"747582511067","passport":"6155 676949","birthdate":"28.07.1973"},
+      {"name":"Козлов Иван Михайлович","ip":"192.168.7.57","city":"Санкт-Петербург","email":"иван85@mail.ru","inn":"838729506285","passport":"5057 350384","birthdate":"09.06.1984"},
+      {"name":"Смирнов Сергей Алексеевич","ip":"192.168.116.45","city":"Казань","email":"сергей36@protonmail.com","inn":"747199646024","passport":"1645 785317","birthdate":"01.11.1977"}
+    ];
+
+    window.onload = () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('auth').classList.remove('hidden');
+      }, 3000);
+    };
+
+    document.getElementById('enterBtn').onclick = () => {
+      const pass = document.getElementById('password').value.trim();
+      if (pass === PASSWORD) {
+        document.getElementById('auth').classList.add('hidden');
+        document.getElementById('main').classList.remove('hidden');
+      } else {
+        alert('Неверный пароль');
+      }
+    };
+
+    document.getElementById('searchBtn').onclick = () => {
+      const input = document.getElementById('tgInput').value.trim();
+      if (!input.startsWith('@') || input.length < 4) return;
+
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('searching').style.display = 'block';
+
+      setTimeout(() => {
+        const profile = fakeProfiles[Math.floor(Math.random() * fakeProfiles.length)];
+        document.getElementById('name').textContent = profile.name;
+        document.getElementById('ip').textContent = profile.ip;
+        document.getElementById('city').textContent = profile.city;
+        document.getElementById('email').textContent = profile.email;
+        document.getElementById('inn').textContent = profile.inn;
+        document.getElementById('passport').textContent = profile.passport;
+        document.getElementById('birthdate').textContent = profile.birthdate;
+        document.getElementById('telegram').textContent = input;
+        document.getElementById('searching').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+      }, 2000);
+    };
+  </script>
+</body>
+</html>
